@@ -8,9 +8,9 @@
   (fn []
     (q/frame-rate 60)
 
-    (q/set-state! :input (input/create)
-                  :time (time/create)
-                  :world (world-setup (q/width) (q/height))
+    (q/set-state! :input (atom (input/create))
+                  :time (atom (time/create (helpers/now)))
+                  :world (atom (world-setup (q/width) (q/height)))
                   :update-world world-update
                   :draw-world world-draw)))
 
@@ -20,14 +20,14 @@
 
 (defn- update! []
   (swap! (q/state :time) #(time/update (helpers/now) %))
-  (def dt (:elapsed-time @(q/state :time)))
 
-  (swap! (q/state :input) #(input/update dt %))
-  (def in @(q/state :input))
+  (let [dt (:elapsed-time @(q/state :time))]
+    (swap! (q/state :input) #(input/update dt %))
 
-  (let [update-world @(q/state :update-world)
-        update-context (create-update-context in dt)]
-    (swap! (q/state :world) #(update-world update-context %))))
+    (let [in @(q/state :input)
+          update-world (q/state :update-world)
+          update-context (create-update-context in dt)]
+      (swap! (q/state :world) #(update-world update-context %)))))
 
 (defn- draw! []
   (let [draw-world (q/state :draw-world)
