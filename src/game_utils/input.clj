@@ -107,6 +107,12 @@
 (defn key-tapped? [key user-input]
   (= (:last-key-tapped user-input) key))
 
+(defn key-down? [key user-input]
+  (= (:last-key-pressed user-input) key))
+
+(defn key-up? [key user-input]
+  (not (key-down? key user-input)))
+
 (defn key-held? [key user-input]
   (let [{:keys [last-key-pressed cycles-key-held]} user-input]
     (and (= last-key-pressed key) (>= cycles-key-held 30))))
