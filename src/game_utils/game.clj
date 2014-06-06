@@ -11,8 +11,8 @@
     (q/set-state! :input (atom (input/create))
                   :time (atom (time/create (helpers/now)))
                   :world (atom (world-setup (q/width) (q/height)))
-                  :update-world world-update
-                  :draw-world world-draw)))
+                  :update-world (atom world-update)
+                  :draw-world (atom world-draw))))
 
 (defn- create-update-context [input time]
   {:input input
@@ -25,13 +25,13 @@
     (swap! (q/state :input) #(input/update dt %))
 
     (let [in @(q/state :input)
-          update-world (q/state :update-world)
+          update-world @(q/state :update-world)
           update-context (create-update-context in dt)]
       (swap! (q/state :world) #(update-world update-context %)))))
 
 (defn- draw! []
-  (let [draw-world (q/state :draw-world)
-        world (q/state :world)]
+  (let [draw-world @(q/state :draw-world)
+        world @(q/state :world)]
     (draw-world world)))
 
 (defn- game-loop []
@@ -44,3 +44,7 @@
             :setup (create-setup world-setup world-update world-draw)
             :draw game-loop
             :size size))
+
+(defn reload-loop! [world-update world-draw]
+  (reset! (q/state :update-world) world-update)
+  (reset! (q/state :draw-world) world-draw))
