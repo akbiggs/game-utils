@@ -77,21 +77,22 @@
 (defn update-print [x]
   (if (= (rand-int 3) 0) (dbg x)))
 
-(defmacro if->> [obj pred then else]
+(defmacro if-> [obj pred then else]
   `(if (~pred ~obj)
-     (->> ~obj ~then)
-     (->> ~obj ~else)))
+     (-> ~obj ~then)
+     (-> ~obj ~else)))
 
-(defmacro react [condition then obj]
-  `(if ~condition (->> ~obj ~then) ~obj))
+(defmacro react [obj condition then]
+  `(if ~condition (-> ~obj ~then) ~obj))
 
 (defmacro react* [obj & statements]
   (assert (= (mod (count statements) 2) 0)
           "react* expects pairs of condition-reactions")
-    `(->> ~obj
-          ~@(for [stmt-pair (pairs statements)]
-             `(helpers/react ~(first stmt-pair)
-                             ~(second stmt-pair)))))
+
+  `(-> ~obj
+      ~@(for [stmt-pair (pairs statements)]
+           `(helpers/react ~(first stmt-pair)
+                           ~(second stmt-pair)))))
 
 (defn map-over-keys [fn hash]
   (apply merge (for [[k v] hash] {(fn k) v})))
