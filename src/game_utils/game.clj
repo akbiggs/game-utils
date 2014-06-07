@@ -38,12 +38,20 @@
   (update!)
   (draw!))
 
+(defn- update-input-on-key-pressed! []
+  (swap! (q/state :input) #(input/update-with-key-press (q/raw-key) %)))
+
+(defn- update-input-on-key-released! []
+  (swap! (q/state :input) #(input/update-with-key-release (q/raw-key) %)))
+
 (defn create [title size
               world-setup world-update world-draw]
   (q/sketch :title title
             :setup (create-setup world-setup world-update world-draw)
             :draw game-loop
-            :size size))
+            :size size
+            :key-pressed update-input-on-key-pressed!
+            :key-released update-input-on-key-released!))
 
 (defn reload-loop! [world-update world-draw]
   (reset! (q/state :update-world) world-update)

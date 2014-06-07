@@ -11,17 +11,17 @@
    :mouse-just-released? false
    :time-since-last-click 0
 
-   :last-key-pressed nil
-   :last-keycode-pressed nil
+   :keys-down nil
    :last-key-tapped nil
    :last-keycode-tapped nil
 
-   :cycles-key-held 0
+   :cycles-keys-held nil
    })
 
 (defn update [elapsed-time previous-input]
   (let [mouse-down? (or (= (q/mouse-button) :left)
                         (= (q/mouse-button) :right))
+        {:keys [previous-mouse-down?]} previous-input
         previous-mouse-down? (:mouse-down? previous-input)
         old-down-duration (:mouse-down-duration previous-input)
 
@@ -30,8 +30,7 @@
         time-since-last-click (if mouse-just-released?
                                 0
                                 (+ (:time-since-last-click previous-input)
-                                   elapsed-time))
-        last-key-pressed (if (q/key-pressed?) (q/raw-key) nil)]
+                                   elapsed-time))]
     {:mouse-pos {:x (q/mouse-x) :y (q/mouse-y)}
      :mouse-down? mouse-down?
      :mouse-up? (not mouse-down?)
@@ -53,12 +52,6 @@
      :time-since-last-click
      time-since-last-click
 
-     :last-key-pressed
-     last-key-pressed
-
-     :last-keycode-pressed
-     (if (q/key-pressed?) (q/key-code) nil)
-
      :last-key-tapped
      (if (and (q/key-pressed?)
               (not= (:last-key-pressed previous-input) (q/raw-key)))
@@ -71,11 +64,13 @@
        (q/key-code)
        nil)
 
-     :cycles-key-held
-     (if (and (not (nil? last-key-pressed))
-              (= last-key-pressed (:last-key-pressed previous-input)))
-       (inc (:cycles-key-held previous-input))
-       0)}))
+     :keys-down
+     (:keys-down previous-input)
+
+     :cycles-keys-held
+     (helpers/map-over-values #(+ % elapsed-time)
+                              (:cycles-keys-held previous-input))}))
+
 
 (defn- event-in-rect? [event hitbox-start hitbox-size input]
   (and event (helpers/is-point-in-rect? (:mouse-pos input) hitbox-start hitbox-size)))
@@ -108,11 +103,22 @@
   (= (:last-key-tapped user-input) key))
 
 (defn key-down? [key user-input]
-  (= (:last-key-pressed user-input) key))
+  (some #{key} (:keys-down user-input)))
 
 (defn key-up? [key user-input]
   (not (key-down? key user-input)))
 
 (defn key-held? [key user-input]
-  (let [{:keys [last-key-pressed cycles-key-held]} user-input]
-    (and (= last-key-pressed key) (>= cycles-key-held 30))))
+  (and (key-down? key user-input)
+       (>= (:cycles-key-held user-input) 30)))
+
+(defn update-with-key-press [k in]
+  (helpers/react in (key-up? k in)
+                 (assoc in
+                   :keys-down (conj (:keys-down in) k)
+                   :cycles-keys-held (assoc (:cycles-keys-held in) k 0))))
+
+(defn update-with-key-release [k in]
+  (assoc in
+    :keys-down (remove #{k} (:keys-down in))
+    :cycles-keys-held (dissoc (:cycles-keys-held in) k)))
