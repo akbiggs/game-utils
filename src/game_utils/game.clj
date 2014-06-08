@@ -2,7 +2,8 @@
   (:require [quil.core :as q]
             [game-utils.helpers :as helpers]
             [game-utils.input :as input]
-            [game-utils.time :as time]))
+            [game-utils.time :as time]
+            [game-utils.profiler :as profiler]))
 
 (defn- create-setup [world-setup world-update world-draw]
   (fn []
@@ -19,24 +20,31 @@
    :elapsed-time time})
 
 (defn- update! []
-  (swap! (q/state :time) #(time/update (helpers/now) %))
+  (profiler/p :update-time
+              (swap! (q/state :time) #(time/update (helpers/now) %)))
 
   (let [dt (:elapsed-time @(q/state :time))]
-    (swap! (q/state :input) #(input/update dt %))
+    (profiler/p :update-input
+                (swap! (q/state :input) #(input/update dt %)))
 
     (let [in @(q/state :input)
           update-world @(q/state :update-world)
           update-context (create-update-context in dt)]
-      (swap! (q/state :world) #(update-world update-context %)))))
+      (profiler/p :update-world
+                  (swap! (q/state :world) #(update-world % update-context))))))
 
 (defn- draw! []
-  (let [draw-world @(q/state :draw-world)
-        world @(q/state :world)]
-    (draw-world world)))
+  (let [draw-world (profiler/p :deref-draw-fn @(q/state :draw-world))
+        world (profiler/p :deref-world @(q/state :world))]
+    (profiler/p :invoke-draw (draw-world world))))
 
 (defn- game-loop []
   (update!)
   (draw!))
+
+(defn- profiled-game-loop []
+  (profiler/profile :info :Update (update!))
+  (profiler/sampling-profile :info 0.25 :Draw (draw!)))
 
 (defn- update-input-on-key-pressed! []
   (swap! (q/state :input) #(input/update-with-key-press (q/raw-key) %)))
@@ -44,12 +52,15 @@
 (defn- update-input-on-key-released! []
   (swap! (q/state :input) #(input/update-with-key-release (q/raw-key) %)))
 
-(defn create [title size
-              world-setup world-update world-draw]
+(helpers/defn-defaults create [title size-or-fullscreen
+                               world-setup world-update world-draw
+                               {profiled? false}]
+
   (q/sketch :title title
             :setup (create-setup world-setup world-update world-draw)
-            :draw game-loop
-            :size size
+            :draw (if profiled? profiled-game-loop game-loop)
+            :size size-or-fullscreen
+            :features (if (= size-or-fullscreen :fullscreen) [:present] [])
             :key-pressed update-input-on-key-pressed!
             :key-released update-input-on-key-released!))
 
