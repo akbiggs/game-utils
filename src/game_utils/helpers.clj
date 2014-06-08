@@ -82,6 +82,9 @@
      (-> ~obj ~then)
      (-> ~obj ~else)))
 
+(defmacro react-fn [obj condition then-fn]
+  (if ~condition (then-fn ~obj) ~obj))
+
 (defmacro react [obj condition then]
   `(if ~condition (-> ~obj ~then) ~obj))
 
