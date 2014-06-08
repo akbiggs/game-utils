@@ -114,7 +114,7 @@
 
 (defn update-with-key-press [k in]
   (helpers/react in (key-up? k in)
-                 (assoc in
+                 (assoc
                    :keys-down (conj (:keys-down in) k)
                    :cycles-keys-held (assoc (:cycles-keys-held in) k 0))))
 
