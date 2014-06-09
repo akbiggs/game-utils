@@ -55,11 +55,11 @@
 (helpers/defn-defaults create [title size-or-fullscreen
                                world-setup world-update world-draw
                                {profiled? false}]
-
   (q/sketch :title title
             :setup (create-setup world-setup world-update world-draw)
             :draw (if profiled? profiled-game-loop game-loop)
             :size size-or-fullscreen
+            :renderer :opengl
             :features (if (= size-or-fullscreen :fullscreen) [:present] [])
             :key-pressed update-input-on-key-pressed!
             :key-released update-input-on-key-released!))
