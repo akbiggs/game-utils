@@ -139,8 +139,8 @@
           (vec (concat mandatory-args
                        [(symbol "&") {:keys option-names
                                       :or options}])))
-       ~body)
-    `(defn ~name ~args ~body)))
+       ~@body)
+    `(defn ~name ~args ~@body)))
 
 (defn choose [pred x y]
   (if (pred x y) [x y] [y x]))
