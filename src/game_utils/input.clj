@@ -122,3 +122,31 @@
   (assoc in
     :keys-down (remove #{k} (:keys-down in))
     :cycles-keys-held (dissoc (:cycles-keys-held in) k)))
+
+(def trigger-checks {:down key-down?
+                     :up key-up?
+                     :tapped key-tapped?
+                     :held key-held?})
+
+(defmacro controls [obj in & key-actions]
+  (assert (helpers/divisible (count key-actions) 3)
+          "expects triplets of (key, trigger, action)")
+
+  `(helpers/react* ~obj
+                   ~@(helpers/flatten-one
+                      (for [[k trigger action] (helpers/triplets key-actions)]
+                        (do
+                          (assert (some #{trigger} (keys trigger-checks))
+                                  (str "Bad trigger name " trigger
+                                       ", expects one of " (keys trigger-checks)))
+
+                          (let [trigger-check# (trigger trigger-checks)]
+                            `((~trigger-check# ~k ~in)
+                              ~action)))))))
+
+(defmacro wasd [obj in w-action a-action s-action d-action]
+  `(controls ~obj ~in
+             \w :down ~w-action
+             \a :down ~a-action
+             \s :down ~s-action
+             \d :down ~d-action))

@@ -9,6 +9,12 @@
 (defn triplets [col]
   (partition 3 col))
 
+(defn divisible [n m]
+  (= (mod n m) 0))
+
+(defn flatten-one [coll]
+  (apply concat coll))
+
 (defn lerp [a b t]
   (+ a (* t (- b a))))
 
@@ -129,6 +135,7 @@
 
   When invoking the function, :<optional-argument-name> <value>
   will specify the value the argument should take on."
+
 
   (if (map? (last args))
     `(defn
