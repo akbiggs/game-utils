@@ -100,8 +100,8 @@
 
   `(-> ~obj
       ~@(for [stmt-pair (pairs statements)]
-           `(helpers/react ~(first stmt-pair)
-                           ~(second stmt-pair)))))
+           `(react ~(first stmt-pair)
+                   ~(second stmt-pair)))))
 
 (defn map-over-keys [fn hash]
   (apply merge (for [[k v] hash] {(fn k) v})))
