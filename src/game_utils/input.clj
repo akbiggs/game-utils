@@ -123,10 +123,10 @@
     :keys-down (remove #{k} (:keys-down in))
     :cycles-keys-held (dissoc (:cycles-keys-held in) k)))
 
-(def trigger-checks {:down key-down?
-                     :up key-up?
-                     :tapped key-tapped?
-                     :held key-held?})
+(def trigger-checks {:down 'key-down?
+                     :up 'key-up?
+                     :tapped 'key-tapped?
+                     :held 'key-held?})
 
 (defmacro controls [obj in & key-actions]
   (assert (helpers/divisible (count key-actions) 3)
@@ -140,8 +140,8 @@
                                   (str "Bad trigger name " trigger
                                        ", expects one of " (keys trigger-checks)))
 
-                          (let [trigger-check# (trigger trigger-checks)]
-                            `((~trigger-check# ~k ~in)
+                          (let [trigger-check (trigger trigger-checks)]
+                            `((~trigger-check ~k ~in)
                               ~action)))))))
 
 (defmacro wasd [obj in w-action a-action s-action d-action]
